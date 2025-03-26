@@ -85,11 +85,12 @@
                     const smoothedLeftY = leftShoulderSmoother.smooth(leftShoulder.y);
 
                     // Threshold for deciding if the shoulder is "elevated" (depends on resolution)
-                    const elevationThreshold = 200;
+                    const elevationDiffThreshold = 10;
+		    const shoulderDiff = smoothedLeftY - smoothedRightY;
 
-                    // Compare smoothed Y positions against the threshold
-                    const rightElevated = smoothedRightY < elevationThreshold;
-                    const leftElevated = smoothedLeftY < elevationThreshold;
+		    const rightElevated = shoulderDiff > elevationDiffThreshold;
+		    const leftElevated = shoulderDiff < -elevationDiffThreshold;
+
 
                     // Log the results to the console
                     console.log(`Smoothed Right Shoulder Y: ${smoothedRightY.toFixed(2)} - ${rightElevated ? 'Elevated' : 'Normal'}`);
