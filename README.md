@@ -17,6 +17,9 @@ Task A aims to track the right bowing arm's movement and provide real-time feedb
 * **Posture Evaluation**: Compares vertical positions of the elbow and shoulder to check if the elbow is raised above the shoulder.
 * **Visual Feedback**: If the elbow is raised above the shoulder, a red circle is drawn; otherwise, a green circle is displayed.
 
+#### Demo Video:
+[Watch the demo video for Task A](https://drive.google.com/file/d/1-qsEet-vwrD8QSecjFgiGkP6VNFDg-CS/view?usp=drive_link)
+
 **Running the Task**
 
 1.  Run the Task:
@@ -41,6 +44,10 @@ Task B calculates the joint angles for the upper body (shoulder, elbow, wrist) u
 * **Reference Comparison**: Compares live arm angles to predefined reference posture angles.
 * **Visual Feedback**: Shows angle values in real-time and flags any deviations from the reference angles.
 
+#### Demo Video:
+[Watch the demo video for Task B](https://drive.google.com/file/d/1INlvHgj14Wu5y-Trw-PXVSD4Kqs8fJHA/view?usp=drive_link)
+
+
 **Running the Task**
 
 1.  Run the Task:
@@ -64,6 +71,9 @@ This task uses BlazePose via TensorFlow.js to detect shoulder elevation during b
 * **Temporal Smoothing**: Applies an exponential moving average (EMA) to smooth the vertical shoulder positions and reduce jitter.
 * **Shoulder Elevation Detection**: Compares the smoothed shoulder positions to determine if one shoulder is elevated during bowing.
 * **Console Feedback**: Logs the smoothed shoulder positions and their elevation status.
+
+#### Demo Video:
+[Watch the demo video for Task D](https://drive.google.com/file/d/1GMIfspa2m1lc5bdMmxDCNVFd10LDX8uj/view?usp=drive_link)
 
 **Running the Task**
 
