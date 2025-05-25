@@ -6,89 +6,100 @@ import numpy as np
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
+# Constants
+WEBCAM_INDEX = 2
+DETECTION_CONFIDENCE = 0.5
+TRACKING_CONFIDENCE = 0.5
+REFERENCE_POSTURE = {
+    "right_arm": 90,  # shoulder-elbow-wrist
+    "left_arm": 120
+}
+TOLERANCE = 15  # degrees
+
 # Function to calculate angle between 3D vectors
 def calculate_angle(a, b, c):
     a = np.array(a)
     b = np.array(b)
     c = np.array(c)
-    
+
     ba = a - b
     bc = c - b
-    
+
     cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
     angle = np.arccos(np.clip(cosine_angle, -1.0, 1.0))  # prevent numerical errors
     return np.degrees(angle)
 
-# Define reference posture angles (in degrees)
-# These should be determined from a "good" violin posture sample
-reference_posture = {
-    "right_arm": 90,  # shoulder-elbow-wrist
-    "left_arm": 120
-}
+# Function to extract coordinates of a joint from landmarks
+def get_coords(landmarks, part):
+    lm = landmarks[mp_pose.PoseLandmark[part]]
+    return [lm.x, lm.y, lm.z]
 
-tolerance = 15  # degrees
+# Function to provide visual feedback on posture
+def provide_visual_feedback(image, angle, side, color, label, coords):
+    h, w, _ = image.shape
+    x, y = int(coords[0] * w), int(coords[1] * h)
+    cv2.putText(image, f'{label}-angle: {int(angle)}',
+                (x - 50, y - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+    cv2.circle(image, (x, y), 10, color, -1)
 
-# Open webcam
-cap = cv2.VideoCapture(2)
+# Function to start pose detection and feedback
+def start_violin_posture_feedback():
+    cap = cv2.VideoCapture(WEBCAM_INDEX)
 
-with mp_pose.Pose(min_detection_confidence=0.5,
-                  min_tracking_confidence=0.5) as pose:
+    with mp_pose.Pose(min_detection_confidence=DETECTION_CONFIDENCE,
+                      min_tracking_confidence=TRACKING_CONFIDENCE) as pose:
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
+            frame = cv2.flip(frame, 1)  # Flip frame for a mirror view
+            image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = pose.process(image)
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-        frame = cv2.flip(frame, 1)
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = pose.process(image)
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            if results.pose_landmarks:
+                # Draw landmarks
+                mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+                landmarks = results.pose_landmarks.landmark
 
-        if results.pose_landmarks:
-            mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-            landmarks = results.pose_landmarks.landmark
+                # Extract coordinates of joints
+                rs = get_coords(landmarks, "RIGHT_SHOULDER")
+                re = get_coords(landmarks, "RIGHT_ELBOW")
+                rw = get_coords(landmarks, "RIGHT_WRIST")
 
-            def get_coords(part):
-                lm = landmarks[mp_pose.PoseLandmark[part]]
-                return [lm.x, lm.y, lm.z]
+                ls = get_coords(landmarks, "LEFT_SHOULDER")
+                le = get_coords(landmarks, "LEFT_ELBOW")
+                lw = get_coords(landmarks, "LEFT_WRIST")
 
-            # Extract joints
-            rs = get_coords("RIGHT_SHOULDER")
-            re = get_coords("RIGHT_ELBOW")
-            rw = get_coords("RIGHT_WRIST")
+                # Calculate angles
+                right_arm_angle = calculate_angle(rs, re, rw)
+                left_arm_angle = calculate_angle(ls, le, lw)
 
-            ls = get_coords("LEFT_SHOULDER")
-            le = get_coords("LEFT_ELBOW")
-            lw = get_coords("LEFT_WRIST")
+                # Compare with reference posture
+                right_flag = abs(right_arm_angle - REFERENCE_POSTURE["right_arm"]) > TOLERANCE
+                left_flag = abs(left_arm_angle - REFERENCE_POSTURE["left_arm"]) > TOLERANCE
 
-            # Calculate angles
-            right_arm_angle = calculate_angle(rs, re, rw)
-            left_arm_angle = calculate_angle(ls, le, lw)
+                # Provide visual feedback
+                right_color = (0, 0, 255) if right_flag else (0, 255, 0)
+                left_color = (0, 0, 255) if left_flag else (0, 255, 0)
 
-            # Compare with reference
-            right_flag = abs(right_arm_angle - reference_posture["right_arm"]) > tolerance
-            left_flag = abs(left_arm_angle - reference_posture["left_arm"]) > tolerance
+                # Display feedback
+                provide_visual_feedback(image, right_arm_angle, 'R', right_color, 'R', re)
+                provide_visual_feedback(image, left_arm_angle, 'L', left_color, 'L', le)
 
-            # Visual feedback
-            color_r = (0, 0, 255) if right_flag else (0, 255, 0)
-            color_l = (0, 0, 255) if left_flag else (0, 255, 0)
+            # Show the image with feedback
+            cv2.imshow('Violin Posture Feedback', image)
 
-            h, w, _ = image.shape
-            re_x, re_y = int(re[0]*w), int(re[1]*h)
-            le_x, le_y = int(le[0]*w), int(le[1]*h)
+            # Break loop on 'q' key press
+            if cv2.waitKey(10) & 0xFF == ord('q'):
+                break
 
-            cv2.putText(image, f'R-angle: {int(right_arm_angle)}',
-                        (re_x - 50, re_y - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color_r, 2)
-            cv2.circle(image, (re_x, re_y), 10, color_r, -1)
+    cap.release()
+    cv2.destroyAllWindows()
 
-            cv2.putText(image, f'L-angle: {int(left_arm_angle)}',
-                        (le_x - 50, le_y - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color_l, 2)
-            cv2.circle(image, (le_x, le_y), 10, color_l, -1)
-
-        cv2.imshow('Violin Posture Feedback', image)
-
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            break
-
-cap.release()
-cv2.destroyAllWindows()
+if __name__ == "__main__":
+    try:
+        start_violin_posture_feedback()
+    except Exception as e:
+        print(f"An error occurred: {e}")
