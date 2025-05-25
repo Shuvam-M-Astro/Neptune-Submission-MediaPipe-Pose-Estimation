@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>BlazePose Shoulder Elevation Tracker</title>
-
     <!-- Load TensorFlow.js core, converter, and WebGL backend -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
@@ -28,82 +27,77 @@
                 this.prev = null;
             }
 
-            // Smoothes the input value using exponential moving average
             smooth(value) {
                 if (this.prev === null) {
-                    this.prev = value; // Initialize with the first value
+                    this.prev = value;
                 } else {
-                    // Apply smoothing: new = α * current + (1 - α) * previous
                     this.prev = this.alpha * value + (1 - this.alpha) * this.prev;
                 }
                 return this.prev;
             }
         }
 
-        // Smoothers for right and left shoulder y-coordinates
         const rightShoulderSmoother = new ExponentialSmoother(0.2);
         const leftShoulderSmoother = new ExponentialSmoother(0.2);
 
-        // Access webcam and stream it to the video element
+        // Initialize the TensorFlow.js backend and BlazePose model
+        async function initializeModel() {
+            await tf.setBackend('webgl');
+            await tf.ready();
+            return await poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, { runtime: 'tfjs' });
+        }
+
+        // Set up webcam
         async function setupCamera() {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             videoElement.srcObject = stream;
             return new Promise(resolve => {
-                videoElement.onloadedmetadata = () => resolve(); // Wait until the video is ready
+                videoElement.onloadedmetadata = () => resolve();
             });
         }
 
-        // Main function: sets backend, loads model, starts camera and detection
-        async function main() {
-            await tf.setBackend('webgl');  // Use WebGL backend for performance
-            await tf.ready();              // Ensure TensorFlow.js is ready
+        // Extract the shoulder positions and calculate their elevation
+        function processShoulderPositions(keypoints) {
+            const rightShoulder = keypoints.find(k => k.name === 'right_shoulder');
+            const leftShoulder = keypoints.find(k => k.name === 'left_shoulder');
 
-            // Create a BlazePose detector instance
-            const detector = await poseDetection.createDetector(
-                poseDetection.SupportedModels.BlazePose,
-                { runtime: 'tfjs' }
-            );
+            if (rightShoulder && leftShoulder) {
+                const smoothedRightY = rightShoulderSmoother.smooth(rightShoulder.y);
+                const smoothedLeftY = leftShoulderSmoother.smooth(leftShoulder.y);
 
-            await setupCamera();   // Start webcam
-            detectPose(detector);  // Begin pose detection loop
+                // Determine if shoulders are elevated based on a threshold
+                const shoulderDiff = smoothedLeftY - smoothedRightY;
+                const elevationDiffThreshold = 0.05; // Adjust the threshold based on the resolution
+
+                const rightElevated = shoulderDiff > elevationDiffThreshold;
+                const leftElevated = shoulderDiff < -elevationDiffThreshold;
+
+                // Log the results
+                console.log(`Smoothed Right Shoulder Y: ${smoothedRightY.toFixed(2)} - ${rightElevated ? 'Elevated' : 'Normal'}`);
+                console.log(`Smoothed Left Shoulder Y: ${smoothedLeftY.toFixed(2)} - ${leftElevated ? 'Elevated' : 'Normal'}`);
+            }
         }
 
-        // Detect pose in each video frame
+        // Run the pose detection and handle the loop
         async function detectPose(detector) {
-            const poses = await detector.estimatePoses(videoElement); // Detect poses from current frame
-            
+            const poses = await detector.estimatePoses(videoElement);
             if (poses.length > 0 && poses[0].keypoints) {
-                const keypoints = poses[0].keypoints;
-
-                // Find the right and left shoulder keypoints
-                const rightShoulder = keypoints.find(k => k.name === 'right_shoulder');
-                const leftShoulder = keypoints.find(k => k.name === 'left_shoulder');
-
-                if (rightShoulder && leftShoulder) {
-                    // Apply smoothing to reduce jitter in shoulder Y positions
-                    const smoothedRightY = rightShoulderSmoother.smooth(rightShoulder.y);
-                    const smoothedLeftY = leftShoulderSmoother.smooth(leftShoulder.y);
-
-                    // Threshold for deciding if the shoulder is "elevated" (depends on resolution)
-                    const elevationDiffThreshold = 10;
-		    const shoulderDiff = smoothedLeftY - smoothedRightY;
-
-		    const rightElevated = shoulderDiff > elevationDiffThreshold;
-		    const leftElevated = shoulderDiff < -elevationDiffThreshold;
-
-
-                    // Log the results to the console
-                    console.log(`Smoothed Right Shoulder Y: ${smoothedRightY.toFixed(2)} - ${rightElevated ? 'Elevated' : 'Normal'}`);
-                    console.log(`Smoothed Left Shoulder Y: ${smoothedLeftY.toFixed(2)} - ${leftElevated ? 'Elevated' : 'Normal'}`);
-                }
+                processShoulderPositions(poses[0].keypoints);
             }
-
-            // Call detectPose again for the next frame
+            // Continuously process new frames
             requestAnimationFrame(() => detectPose(detector));
         }
 
-        // Kick off the app
-        main();
+        // Initialize and start pose tracking
+        async function startTracking() {
+            const detector = await initializeModel();
+            await setupCamera();
+            detectPose(detector); // Start pose detection loop
+        }
+
+        // Start tracking when the page is ready
+        window.onload = () => startTracking();
+
     </script>
 </body>
 </html>
