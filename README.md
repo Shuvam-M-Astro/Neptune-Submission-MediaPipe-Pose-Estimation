@@ -4,11 +4,12 @@ This project focuses on real-time body tracking for violinists using MediaPipe f
 
 ## Tasks
 
-### Task A: Real-Time Posture Feedback - Tracking Bowing Arm Movement
+### Real-Time Posture Feedback – Tracking Bowing Arm Movement
+Filename: posture_feedback_webcam.py
 
 **Overview**
 
-Task A aims to track the right bowing arm's movement and provide real-time feedback based on the elevation of the elbow compared to the shoulder. If the elbow is raised above the shoulder, the posture is flagged, and visual feedback (color change) is provided to the user.
+Tracks the bowing arm's elevation and flags poor posture if the elbow is higher than the shoulder.
 
 **Features**
 
@@ -18,7 +19,7 @@ Task A aims to track the right bowing arm's movement and provide real-time feedb
 * **Visual Feedback**: If the elbow is raised above the shoulder, a red circle is drawn; otherwise, a green circle is displayed.
 
 #### Demo Video:
-[Watch the demo video for Task A](https://drive.google.com/file/d/1-qsEet-vwrD8QSecjFgiGkP6VNFDg-CS/view?usp=drive_link)
+[Watch the demo video](https://drive.google.com/file/d/1-qsEet-vwrD8QSecjFgiGkP6VNFDg-CS/view?usp=drive_link)
 
 **Running the Task**
 
@@ -28,14 +29,15 @@ Task A aims to track the right bowing arm's movement and provide real-time feedb
     git clone https://github.com/Shuvam-M-Astro/Neptune-Submission-MediaPipe-Pose-Estimation.git
     cd Neptune-Submission-MediaPipe-Pose-Estimation
     pip install mediapipe opencv-python
-    python TaskA_Neptune.py
     ```
 
-### Task B: 3D Pose Estimation - Tracking Violin Posture
+### 3D Pose Estimation – Tracking Violin Posture Angles
+
+Filename: violin_arm_angle_checker.py
 
 **Overview**
 
-Task B calculates the joint angles for the upper body (shoulder, elbow, wrist) using 3D pose estimation. It compares these angles to a predefined reference posture for violin playing and provides feedback if there's any deviation from the ideal angles.
+Computes 3D joint angles and compares them against reference posture angles.
 
 **Features**
 
@@ -45,7 +47,7 @@ Task B calculates the joint angles for the upper body (shoulder, elbow, wrist) u
 * **Visual Feedback**: Shows angle values in real-time and flags any deviations from the reference angles.
 
 #### Demo Video:
-[Watch the demo video for Task B](https://drive.google.com/file/d/1INlvHgj14Wu5y-Trw-PXVSD4Kqs8fJHA/view?usp=drive_link)
+[Watch the demo video](https://drive.google.com/file/d/1INlvHgj14Wu5y-Trw-PXVSD4Kqs8fJHA/view?usp=drive_link)
 
 
 **Running the Task**
@@ -56,14 +58,14 @@ Task B calculates the joint angles for the upper body (shoulder, elbow, wrist) u
     git clone https://github.com/Shuvam-M-Astro/Neptune-Submission-MediaPipe-Pose-Estimation.git
     cd Neptune-Submission-MediaPipe-Pose-Estimation
     pip install mediapipe opencv-python numpy
-    python TaskB_Neptune.py
     ```
 
-### Task D: BlazePose-Based Motion Tracker - Shoulder Elevation Detection
+### BlazePose-Based Motion Tracker – Shoulder Elevation Detection
+Filename: shoulder_elevation_tracker.html
 
 **Overview**
 
-This task uses BlazePose via TensorFlow.js to detect shoulder elevation during bowing. The system implements temporal smoothing to reduce jitter and provide more stable feedback.
+Web-based BlazePose tool with temporal smoothing to detect uneven shoulder elevation during bowing.
 
 **Features**
 
@@ -73,7 +75,7 @@ This task uses BlazePose via TensorFlow.js to detect shoulder elevation during b
 * **Console Feedback**: Logs the smoothed shoulder positions and their elevation status.
 
 #### Demo Video:
-[Watch the demo video for Task D](https://drive.google.com/file/d/1GMIfspa2m1lc5bdMmxDCNVFd10LDX8uj/view?usp=drive_link)
+[Watch the demo video](https://drive.google.com/file/d/1GMIfspa2m1lc5bdMmxDCNVFd10LDX8uj/view?usp=drive_link)
 
 **Running the Task**
 
@@ -92,11 +94,13 @@ This task uses BlazePose via TensorFlow.js to detect shoulder elevation during b
 
 3.  Open `index.html` in a browser, and check the console (press F12) to see the real-time shoulder elevation status.
 
-### Task H: Violin Movement Classification - Steady vs Shaky Bowing
+### Violin Movement Classification – Steady vs. Shaky Bowing
+
+Filename: violin_wrist_stability_classifier.py
 
 **Overview**
 
-This task uses a machine learning model (Random Forest) to classify wrist movements in a violin performance as "steady" or "shaky." The model is trained using wrist movement data extracted from MediaPipe Pose landmarks.
+Trains a Random Forest classifier on wrist movement data to detect steady vs. shaky bowing.
 
 **Features**
 
@@ -112,7 +116,6 @@ This task uses a machine learning model (Random Forest) to classify wrist moveme
     git clone https://github.com/Shuvam-M-Astro/Neptune-Submission-MediaPipe-Pose-Estimation.git
     cd Neptune-Submission-MediaPipe-Pose-Estimation
     pip install mediapipe opencv-python scikit-learn
-    python TaskH_Classifier.py
     ```
 
 ## Project Setup
