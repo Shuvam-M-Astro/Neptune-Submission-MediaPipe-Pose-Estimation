@@ -20,6 +20,7 @@ Tracks the bowing arm's elevation and flags poor posture if the elbow is higher 
 
 #### Demo Video:
 [Watch the demo video](https://drive.google.com/file/d/1-qsEet-vwrD8QSecjFgiGkP6VNFDg-CS/view?usp=drive_link)
+![Demo](assets/A.png)
 
 **Running the Task**
 
@@ -48,6 +49,7 @@ Computes 3D joint angles and compares them against reference posture angles.
 
 #### Demo Video:
 [Watch the demo video](https://drive.google.com/file/d/1INlvHgj14Wu5y-Trw-PXVSD4Kqs8fJHA/view?usp=drive_link)
+![Demo](assets/B.png)
 
 
 **Running the Task**
